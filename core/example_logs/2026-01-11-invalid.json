@@ -1,0 +1,16 @@
+{
+  "date": "2026-01-11",
+  "activities": [
+    {
+      "name": "Actividad con tipo incorrecto",
+      "duration_minutes": 60,
+      "output_produced": "Algo hecho",
+      "type": "invalid_type"
+    }
+  ],
+  "self_assessment": {
+    "honesty_score": 8,
+    "main_obstacle": "Distracciones",
+    "commitment_tomorrow": "Enfoque total"
+  }
+}

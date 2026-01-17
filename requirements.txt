@@ -1,0 +1,11 @@
+# requirements.txt
+# Instalacion: pip install -r requirements.txt
+
+# Core dependencie
+python-dotenv>=1.0.0 # Para variables de entorno (API keys futuras) 
+
+# Future dependencies (comentadas por ahora)
+# openai>=1.0.0  # Para openai API (Dia 16)
+# anthropic>=0.7.0 # Para Claude API (Dia 15)
+# pandas>=2.0.0 # Para analisis de datos (Dia 9)
+

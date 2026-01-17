@@ -1,0 +1,15 @@
+{
+  "date": "2026-01-12",
+  "activities": [
+    {
+      "name": "Actividad sin duration_minutes",
+      "output_produced": "none",
+      "type": "consumption"
+    }
+  ],
+  "self_assessment": {
+    "honesty_score": 7,
+    "main_obstacle": "Procrastinaci\u00f3n",
+    "commitment_tomorrow": "Empezar a las 9am"
+  }
+}
