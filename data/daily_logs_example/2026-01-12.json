@@ -1,0 +1,34 @@
+{
+  "date": "2026-01-12",
+  "activities": [
+    {
+      "name": "Revisión de arquitectura del sistema AI Coach",
+      "duration_minutes": 45,
+      "output_produced": "none",
+      "type": "consumption"
+    },
+    {
+      "name": "Configuración inicial del repositorio GitHub",
+      "duration_minutes": 30,
+      "output_produced": "Repositorio inicializado con README y estructura básica",
+      "type": "production"
+    },
+    {
+      "name": "Investigación sobre sistemas de logging en Python",
+      "duration_minutes": 60,
+      "output_produced": "none",
+      "type": "consumption"
+    },
+    {
+      "name": "Diseño de esquema JSON para logs diarios",
+      "duration_minutes": 40,
+      "output_produced": "Documento schema.md con especificación completa",
+      "type": "both"
+    }
+  ],
+  "self_assessment": {
+    "honesty_score": 8,
+    "main_obstacle": "Distracciones constantes por notificaciones de Slack y correos",
+    "commitment_tomorrow": "Desactivar notificaciones durante bloques de 90 minutos de trabajo enfocado"
+  }
+}

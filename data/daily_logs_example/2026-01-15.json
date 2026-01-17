@@ -1,0 +1,34 @@
+{
+  "date": "2026-01-15",
+  "activities": [
+    {
+      "name": "Revisión de pull requests de otros proyectos",
+      "duration_minutes": 55,
+      "output_produced": "none",
+      "type": "consumption"
+    },
+    {
+      "name": "Arreglo de bugs en el parser",
+      "duration_minutes": 40,
+      "output_produced": "Commits corrigiendo manejo de fechas inválidas",
+      "type": "production"
+    },
+    {
+      "name": "Brainstorming de features adicionales",
+      "duration_minutes": 30,
+      "output_produced": "none",
+      "type": "consumption"
+    },
+    {
+      "name": "YouTube: procrastinación con videos de tech",
+      "duration_minutes": 65,
+      "output_produced": "none",
+      "type": "consumption"
+    }
+  ],
+  "self_assessment": {
+    "honesty_score": 9,
+    "main_obstacle": "Energía baja, caí en la trampa de YouTube sin darme cuenta",
+    "commitment_tomorrow": "Usar técnica Pomodoro estricta: 25 min trabajo, 5 min descanso sin pantallas"
+  }
+}

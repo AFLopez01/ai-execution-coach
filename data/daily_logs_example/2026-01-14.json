@@ -1,0 +1,34 @@
+{
+  "date": "2026-01-14",
+  "activities": [
+    {
+      "name": "Creación del generador de reportes semanales",
+      "duration_minutes": 90,
+      "output_produced": "Script weekly_report.py que genera resumen de productividad",
+      "type": "production"
+    },
+    {
+      "name": "Videos sobre visualización de datos con matplotlib",
+      "duration_minutes": 40,
+      "output_produced": "none",
+      "type": "consumption"
+    },
+    {
+      "name": "Experimentación con gráficos de barras y líneas",
+      "duration_minutes": 50,
+      "output_produced": "none",
+      "type": "consumption"
+    },
+    {
+      "name": "Documentación del proyecto en README",
+      "duration_minutes": 35,
+      "output_produced": "README.md actualizado con instrucciones de uso",
+      "type": "production"
+    }
+  ],
+  "self_assessment": {
+    "honesty_score": 7,
+    "main_obstacle": "Perfeccionismo en los gráficos, invertí demasiado tiempo en detalles estéticos",
+    "commitment_tomorrow": "Priorizar funcionalidad sobre apariencia. Timebox visual tasks a 30 min máximo"
+  }
+}

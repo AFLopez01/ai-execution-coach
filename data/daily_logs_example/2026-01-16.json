@@ -1,0 +1,40 @@
+{
+  "date": "2026-01-16",
+  "activities": [
+    {
+      "name": "Implementación de sistema de alertas para días improductivos",
+      "duration_minutes": 75,
+      "output_produced": "Módulo alerts.py con detección de patrones negativos",
+      "type": "production"
+    },
+    {
+      "name": "Configuración de .gitignore para excluir logs personales",
+      "duration_minutes": 15,
+      "output_produced": ".gitignore actualizado con reglas para data/logs/",
+      "type": "production"
+    },
+    {
+      "name": "Creación de archivos de ejemplo para documentación",
+      "duration_minutes": 45,
+      "output_produced": "5 archivos daily_log de ejemplo con datos ficticios",
+      "type": "production"
+    },
+    {
+      "name": "Planificación de siguientes features",
+      "duration_minutes": 30,
+      "output_produced": "none",
+      "type": "consumption"
+    },
+    {
+      "name": "Investigación sobre integración con Notion API",
+      "duration_minutes": 50,
+      "output_produced": "none",
+      "type": "consumption"
+    }
+  ],
+  "self_assessment": {
+    "honesty_score": 8,
+    "main_obstacle": "Saltar entre tareas sin terminar completamente la anterior",
+    "commitment_tomorrow": "Regla: no empezar nueva tarea hasta cerrar la actual con commit o documento"
+  }
+}

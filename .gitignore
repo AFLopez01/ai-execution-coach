@@ -1,0 +1,27 @@
+# Archivos Python
+_pycache_/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Datos personales - PATRÓN GENERAL
+data/daily_logs/
+data/daily_logs_amor/
+data/weekly_reports/
+
+prompts/
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Variables de entorno
+.env
