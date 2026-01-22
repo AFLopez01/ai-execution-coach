@@ -5,7 +5,7 @@ El Execution Score mide el porcentaje de actividades que generaron un output
 tangible (cualquier valor diferente a "none").
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, cast
 
 
 def calculate_daily_score(daily_log_dict: Dict[str, Any]) -> float:
@@ -42,10 +42,12 @@ def calculate_daily_score(daily_log_dict: Dict[str, Any]) -> float:
     if 'activities' not in daily_log_dict:
         raise KeyError("El diccionario debe contener la clave 'activities'")
     
-    activities = daily_log_dict['activities']
+    activities_raw: Any = daily_log_dict['activities']
     
-    if not isinstance(activities, list):
+    if not isinstance(activities_raw, list):
         raise ValueError("'activities' debe ser una lista")
+    
+    activities: List[Dict[str, Any]] = cast(List[Dict[str, Any]], activities_raw)
     
     # Caso edge: sin actividades
     if len(activities) == 0:
@@ -56,7 +58,7 @@ def calculate_daily_score(daily_log_dict: Dict[str, Any]) -> float:
     
     for activity in activities:
         # Verificar si existe el campo output_produced
-        output = activity.get('output_produced', 'none')
+        output: Any = activity.get('output_produced', 'none')
         
         # Contar si NO es "none" (case-insensitive para robustez)
         if output and str(output).lower().strip() != 'none':
@@ -92,7 +94,7 @@ def calculate_weekly_score(list_of_daily_logs: List[Dict[str, Any]]) -> float:
     if not list_of_daily_logs:
         raise ValueError("La lista de logs diarios no puede estar vacía")
     
-    daily_scores = []
+    daily_scores: List[float] = []
     
     for daily_log in list_of_daily_logs:
         try:

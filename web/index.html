@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Execution Coach - De aprender sin avanzar a ejecutar con intención</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        header {
+            background: #0f0f0f;
+            padding: 1.5rem 5%;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid #333;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00d4ff;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #e0e0e0;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: #00d4ff;
+        }
+
+        .cta-btn {
+            background: #00d4ff;
+            color: #0f0f0f;
+            padding: 0.7rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .cta-btn:hover {
+            background: #00b8e6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-top: 80px;
+            padding: 8rem 5% 6rem;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-text .highlight {
+            color: #00d4ff;
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero-text .subtitle {
+            font-size: 1.3rem;
+            color: #b0b0b0;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00d4ff;
+            display: block;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .hero-visual {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .terminal {
+            background: #0a0a0a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'Courier New', monospace;
+            position: relative;
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-line {
+            margin: 0.5rem 0;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .terminal-line:nth-child(1) { animation-delay: 0.5s; }
+        .terminal-line:nth-child(2) { animation-delay: 1s; }
+        .terminal-line:nth-child(3) { animation-delay: 1.5s; }
+        .terminal-line:nth-child(4) { animation-delay: 2s; }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .prompt { color: #00d4ff; }
+        .output { color: #27c93f; }
+        .warning { color: #ffbd2e; }
+        .error { color: #ff5f56; }
+
+        /* Problem Section */
+        .problem-section {
+            padding: 6rem 5%;
+            background: #0f0f0f;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #00d4ff;
+        }
+
+        .problem-cards {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .problem-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 2rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .problem-card:hover {
+            transform: translateY(-5px);
+            border-color: #00d4ff;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #00d4ff;
+        }
+
+        .card-description {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* How it Works */
+        .how-it-works {
+            padding: 6rem 5%;
+            background: #1a1a1a;
+        }
+
+        .steps {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            gap: 3rem;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0f0f0f;
+        }
+
+        .step-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #e0e0e0;
+        }
+
+        .step-content p {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* Interactive Demo */
+        .demo-section {
+            padding: 6rem 5%;
+            background: #0f0f0f;
+        }
+
+        .demo-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 3rem;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 2rem;
+            border-radius: 50%;
+            border: 8px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+            position: relative;
+            transition: all 0.5s;
+        }
+
+        .score-circle.excellent {
+            border-color: #27c93f;
+            color: #27c93f;
+            box-shadow: 0 0 30px rgba(39, 201, 63, 0.3);
+        }
+
+        .score-circle.acceptable {
+            border-color: #ffbd2e;
+            color: #ffbd2e;
+            box-shadow: 0 0 30px rgba(255, 189, 46, 0.3);
+        }
+
+        .score-circle.failure {
+            border-color: #ff5f56;
+            color: #ff5f56;
+            box-shadow: 0 0 30px rgba(255, 95, 86, 0.3);
+        }
+
+        .activity-input {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .input-group select,
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .btn-calculate {
+            width: 100%;
+            padding: 1rem;
+            background: #00d4ff;
+            color: #0f0f0f;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-calculate:hover {
+            background: #00b8e6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Features */
+        .features {
+            padding: 6rem 5%;
+            background: #1a1a1a;
+        }
+
+        .features-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            border-color: #00d4ff;
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #00d4ff;
+        }
+
+        .feature p {
+            color: #b0b0b0;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        footer {
+            background: #0a0a0a;
+            padding: 3rem 5%;
+            text-align: center;
+            border-top: 1px solid #333;
+        }
+
+        .footer-quote {
+            font-size: 1.5rem;
+            font-style: italic;
+            color: #00d4ff;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links {
+            margin-bottom: 2rem;
+        }
+
+        .footer-links a {
+            color: #888;
+            text-decoration: none;
+            margin: 0 1rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #00d4ff;
+        }
+
+        .copyright {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .step {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <div class="logo">AI EXECUTION COACH</div>
+            <ul class="nav-links">
+                <li><a href="#home">INICIO</a></li>
+                <li><a href="#problema">PROBLEMA</a></li>
+                <li><a href="#como-funciona">CÓMO FUNCIONA</a></li>
+                <li><a href="#demo">DEMO</a></li>
+                <li><a href="#features">CARACTERÍSTICAS</a></li>
+            </ul>
+            <a href="#demo" class="cta-btn">PRUEBA DEMO</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>De aprender sin avanzar a <span class="highlight">ejecutar con intención</span></h1>
+                <p class="subtitle">Un sistema de IA diseñado para detectar y eliminar el autoengaño en el aprendizaje. No mide horas estudiadas. Solo valida resultados reales.</p>
+                <a href="#demo" class="cta-btn">Calcular tu Execution Score</a>
+                
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-number">0%</span>
+                        <span class="stat-label">Motivación vacía</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">100%</span>
+                        <span class="stat-label">Outputs reales</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">∞</span>
+                        <span class="stat-label">Excusas detectadas</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dot dot-red"></div>
+                        <div class="terminal-dot dot-yellow"></div>
+                        <div class="terminal-dot dot-green"></div>
+                    </div>
+                    <div class="terminal-line"><span class="prompt">$</span> python main.py</div>
+                    <div class="terminal-line"><span class="output">📊 Analizando tu semana...</span></div>
+                    <div class="terminal-line"><span class="warning">⚠️  Execution Score: 45/100</span></div>
+                    <div class="terminal-line"><span class="error">❌ FRACASO - Acción inmediata requerida</span></div>
+                    <div class="terminal-line"><span class="output">🔍 Autoengaños detectados: 8 actividades sin output</span></div>
+                    <div class="terminal-line"><span class="prompt">$</span> <span style="animation: blink 1s infinite;">_</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section class="problem-section" id="problema">
+        <h2 class="section-title">El Problema: Aprendizaje Pasivo Disfrazado de Progreso</h2>
+        <div class="problem-cards">
+            <div class="problem-card">
+                <div class="card-icon">📚</div>
+                <h3 class="card-title">El Estudiante Perpetuo</h3>
+                <p class="card-description">8 cursos de programación completados. Conoce múltiples frameworks. <strong>Cero proyectos funcionales.</strong> Autoengaño: "Aún no estoy listo para construir algo propio"</p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="card-icon">⚡</div>
+                <h3 class="card-title">El Consumidor de Productividad</h3>
+                <p class="card-description">Lee libros de hábitos. Escucha podcasts de alto rendimiento. Cambia constantemente de sistema. <strong>Ningún hábito dura más de 2 semanas.</strong></p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="card-icon">💡</div>
+                <h3 class="card-title">El Emprendedor en Preparación Eterna</h3>
+                <p class="card-description">Ideas validadas mentalmente. Consume contenido de marketing y ventas. <strong>Ningún MVP lanzado.</strong> Autoengaño: "Necesito aprender un poco más"</p>
+            </div>
+            
+            <div class="problem-card">
+                <div class="card-icon">✍️</div>
+                <h3 class="card-title">El Creador que No Publica</h3>
+                <p class="card-description">Notas extensas. Borradores infinitos. <strong>Nunca publica nada.</strong> Autoengaño: "Aún no está suficientemente bueno"</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-it-works" id="como-funciona">
+        <h2 class="section-title">¿Cómo Funciona?</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Define tu Objetivo Semanal</h3>
+                    <p>Establece qué quieres lograr esta semana. No qué quieres aprender, sino qué quieres <strong>producir</strong>. El sistema no acepta objetivos vagos.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Registra tus Actividades Diarias</h3>
+                    <p>Cada día registras: actividad realizada, tiempo invertido, y lo más importante: <strong>output producido</strong>. Si pones "none", automáticamente se clasifica como consumo.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Proporciona Evidencia Real</h3>
+                    <p>Para cada output, debes proporcionar evidencia verificable: link a repo, archivo creado, post publicado. El sistema <strong>valida que la evidencia sea real</strong>.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3>Recibe tu Execution Score Semanal</h3>
+                    <p>Al final de la semana, la IA analiza todo y calcula tu score: (Actividades con output / Total actividades) × 100. Sin piedad. Sin excusas.</p>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3>El Sistema Toma Decisiones Automáticas</h3>
+                    <p>Si tu score < 50: <strong>objetivo reducido al 50%</strong>. Si < 60: advertencia severa. El sistema ajusta tu meta según tu capacidad real de ejecución.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Demo -->
+    <section class="demo-section" id="demo">
+        <h2 class="section-title">Calculadora de Execution Score</h2>
+        <div class="demo-container">
+            <div class="score-display">
+                <div class="score-circle" id="scoreCircle">
+                    <span id="scoreValue">0</span>
+                </div>
+                <h3 id="scoreLabel">Agrega actividades para calcular</h3>
+            </div>
+
+            <div class="activity-input">
+                <div class="input-group">
+                    <label>Total de Actividades esta Semana</label>
+                    <input type="number" id="totalActivities" min="1" value="10" />
+                </div>
+
+                <div class="input-group">
+                    <label>Actividades con Output Real (commits, posts, MVPs, etc.)</label>
+                    <input type="number" id="outputActivities" min="0" value="6" />
+                </div>
+
+                <button class="btn-calculate" onclick="calculateScore()">Calcular Execution Score</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <h2 class="section-title">Características del Sistema</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <h3>Solo Valida Resultados</h3>
+                <p>No mide horas estudiadas ni cursos completados. Solo cuenta lo que produces.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <h3>Detección de Autoengaño</h3>
+                <p>La IA identifica patrones de procrastinación disfrazados de "investigación" o "planificación".</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Reportes Semanales Brutales</h3>
+                <p>Análisis directo sin suavizar la verdad. Si hay autoengaño, se señala claramente.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">⚙️</div>
+                <h3>Decisiones Automáticas</h3>
+                <p>El sistema ajusta tus objetivos según tu capacidad real de ejecución. Sin piedad.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">✅</div>
+                <h3>Validación de Evidencias</h3>
+                <p>Verifica que tus outputs sean reales: archivos existentes, repos públicos, URLs válidas.</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <h3>Análisis con GPT-4</h3>
+                <p>Integración con OpenAI para análisis profundo de patrones y confrontación estratégica.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-quote">"Si no hay output, no hubo aprendizaje."</div>
+        <div class="footer-links">
+            <a href="https://github.com">GitHub</a>
+            <a href="#">Documentación</a>
+            <a href="#">Contribuir</a>
+            <a href="#">Contacto</a>
+        </div>
+        <p class="copyright">© 2026 AI Execution Coach. Un proyecto contra el autoengaño.</p>
+    </footer>
+
+    <script>
+        function calculateScore() {
+            const total = parseInt(document.getElementById('totalActivities').value) || 0;
+            const output = parseInt(document.getElementById('outputActivities').value) || 0;
+
+            if (total === 0) {
+                alert('El total de actividades debe ser mayor a 0');
+                return;
+            }
+
+            if (output > total) {
+                alert('Las actividades con output no pueden ser mayores al total');
+                return;
+            }
+
+            const score = Math.round((output / total) * 100);
+            const scoreCircle = document.getElementById('scoreCircle');
+            const scoreValue = document.getElementById('scoreValue');
+            const scoreLabel = document.getElementById('scoreLabel');
+
+            // Animate score
+            let currentScore = 0;
+            const interval = setInterval(() => {
+                currentScore += 2;
+                if (currentScore >= score) {
+                    currentScore = score;
+                    clearInterval(interval);
+                }
+                scoreValue.textContent = currentScore;
+            }, 20);
+
+            // Update styling and label
+            scoreCircle.className = 'score-circle';
+            if (score > 80) {
+                scoreCircle.classList.add('excellent');
+                scoreLabel.textContent = '🎉 EXCELENTE - Sigue así';
+            } else if (score >= 60) {
+                scoreCircle.classList.add('acceptable');
+                scoreLabel.textContent = '⚠️ ACEPTABLE - Límite inferior, cuidado';
+            } else {
+                scoreCircle.classList.add('failure');
+                scoreLabel.textContent = '❌ FRACASO - Acción inmediata requerida';
+            }
+        }
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Initial calculation
+        window.addEventListener('load', () => {
+            setTimeout(calculateScore, 500);
+        });
+    </script>
+</body>
+</html>

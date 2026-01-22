@@ -11,10 +11,10 @@ Versión: 2.0 - Actualizado para estructura real del proyecto
 import json
 import os
 from pathlib import Path
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, cast
 
 # Importar funciones del score_calculator
-from score_calculator import calculate_daily_score, calculate_weekly_score, classify_score
+from .score_calculator import calculate_daily_score, classify_score
 
 
 # Constantes de validación
@@ -72,7 +72,7 @@ def validate_daily_log(file_path: str) -> Tuple[bool, str | None]:
     # 3. Intentar leer y parsear el JSON
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+            data: Any = json.load(f)
     except json.JSONDecodeError as e:
         return False, f"JSON inválido en línea {e.lineno}: {e.msg}"
     except Exception as e:
@@ -82,11 +82,17 @@ def validate_daily_log(file_path: str) -> Tuple[bool, str | None]:
     if not isinstance(data, dict):
         return False, "El JSON debe ser un objeto (diccionario), no una lista o valor primitivo"
     
+    data = cast(Dict[str, Any], data)
+    
     # 5. Verificar campos requeridos en el nivel superior
-    required_fields = ['date', 'activities', 'self_assessment']
+    required_fields = ['date', 'activities']
     for field in required_fields:
         if field not in data:
             return False, f"Campo requerido faltante en la raíz: '{field}'"
+    
+    # Verificar self_assessment (con ambos nombres posibles)
+    if 'self_assessment' not in data and 'self_assesment' not in data:
+        return False, "Campo requerido faltante en la raíz: 'self_assessment' o 'self_assesment'"
     
     # 6. Validar campo 'date'
     if not isinstance(data['date'], str):
@@ -103,73 +109,93 @@ def validate_daily_log(file_path: str) -> Tuple[bool, str | None]:
         return False, "El campo 'activities' no puede estar vacío (debe haber al menos 1 actividad)"
     
     # 8. Validar cada actividad individual
-    activity_required_fields = ['name', 'duration_minutes', 'output_produced', 'type']
-    
-    for idx, activity in enumerate(data['activities'], start=1):
-        if not isinstance(activity, dict):
+    # Aceptar ambos formatos de campos (legacy y nuevo)
+    for idx, activity_raw in enumerate(data['activities'], start=1):
+        if not isinstance(activity_raw, dict):
             return False, f"Actividad #{idx} debe ser un objeto/diccionario"
         
-        # Verificar campos requeridos en cada actividad
-        for field in activity_required_fields:
-            if field not in activity:
-                return False, f"Actividad #{idx}: campo requerido faltante '{field}'"
+        activity: Dict[str, Any] = cast(Dict[str, Any], activity_raw)
         
-        # Validar 'name'
-        if not isinstance(activity['name'], str):
-            return False, f"Actividad #{idx}: 'name' debe ser string"
+        # Validar que tenga al menos descripción, tiempo y output
+        has_description = any(k in activity for k in ['name', 'description'])
+        has_time = any(k in activity for k in ['duration_minutes', 'time_invested_minutes'])
+        has_output = 'output_produced' in activity
+        has_type = 'type' in activity
         
-        if not activity['name'].strip():
-            return False, f"Actividad #{idx}: 'name' no puede estar vacío"
+        if not has_description:
+            return False, f"Actividad #{idx}: debe tener 'name' o 'description'"
         
-        # Validar 'duration_minutes'
-        if not isinstance(activity['duration_minutes'], (int, float)):
-            return False, f"Actividad #{idx}: 'duration_minutes' debe ser un número, recibido: {type(activity['duration_minutes']).__name__}"
+        if not has_time:
+            return False, f"Actividad #{idx}: debe tener 'duration_minutes' o 'time_invested_minutes'"
         
-        if activity['duration_minutes'] <= 0:
-            return False, f"Actividad #{idx}: 'duration_minutes' debe ser mayor a 0, recibido: {activity['duration_minutes']}"
+        if not has_output:
+            return False, f"Actividad #{idx}: campo requerido faltante 'output_produced'"
         
-        # Validar 'output_produced'
+        if not has_type:
+            return False, f"Actividad #{idx}: campo requerido faltante 'type'"
+        
+        # Validar tipos de datos
+        if has_time:
+            time_field = 'duration_minutes' if 'duration_minutes' in activity else 'time_invested_minutes'
+            time_value = activity[time_field]
+            if not isinstance(time_value, (int, float)):
+                return False, f"Actividad #{idx}: '{time_field}' debe ser un número"
+            if time_value <= 0:
+                return False, f"Actividad #{idx}: '{time_field}' debe ser mayor a 0"
+        
+        # Validar output_produced
         if not isinstance(activity['output_produced'], str):
             return False, f"Actividad #{idx}: 'output_produced' debe ser string"
         
-        # Validar 'type'
+        # Validar type (puede ser 'production', 'consumption', 'both', 'learning')
         if not isinstance(activity['type'], str):
             return False, f"Actividad #{idx}: 'type' debe ser string"
         
-        if activity['type'] not in VALID_ACTIVITY_TYPES:
-            return False, f"Actividad #{idx}: 'type' debe ser uno de {VALID_ACTIVITY_TYPES}, recibido: '{activity['type']}'"
+        valid_types = VALID_ACTIVITY_TYPES + ['learning']  # Aceptar también 'learning'
+        if activity['type'] not in valid_types:
+            return False, f"Actividad #{idx}: 'type' debe ser uno de {valid_types}, recibido: '{activity['type']}'"
     
-    # 9. Validar campo 'self_assessment'
-    if not isinstance(data['self_assessment'], dict):
+    # 9. Validar campo 'self_assessment' (con ambas grafías)
+    assessment_raw: Any = data.get('self_assessment') or data.get('self_assesment')
+    
+    if not isinstance(assessment_raw, dict):
         return False, "El campo 'self_assessment' debe ser un objeto/diccionario"
     
-    # Verificar campos requeridos en self_assessment
-    assessment_required_fields = ['honesty_score', 'main_obstacle', 'commitment_tomorrow']
-    for field in assessment_required_fields:
-        if field not in data['self_assessment']:
-            return False, f"self_assessment: campo requerido faltante '{field}'"
+    assessment: Dict[str, Any] = cast(Dict[str, Any], assessment_raw)
     
-    # Validar 'honesty_score'
-    honesty = data['self_assessment']['honesty_score']
+    # Validar campos en self_assessment (acepta ambos nombres de campos)
+    # Buscar honesty_score
+    honesty: Any = assessment.get('honesty_score')
+    if honesty is None:
+        return False, "self_assessment: campo requerido faltante 'honesty_score'"
+    
     if not isinstance(honesty, (int, float)):
         return False, f"self_assessment: 'honesty_score' debe ser un número, recibido: {type(honesty).__name__}"
     
     if not (MIN_HONESTY_SCORE <= honesty <= MAX_HONESTY_SCORE):
         return False, f"self_assessment: 'honesty_score' debe estar entre {MIN_HONESTY_SCORE} y {MAX_HONESTY_SCORE}, recibido: {honesty}"
     
-    # Validar 'main_obstacle'
-    if not isinstance(data['self_assessment']['main_obstacle'], str):
+    # Buscar main obstacle/blocker (acepta ambos nombres)
+    main_obstacle: Any = assessment.get('main_obstacle') or assessment.get('main_blocker')
+    if main_obstacle is None:
+        return False, "self_assessment: campo requerido faltante 'main_obstacle' o 'main_blocker'"
+    
+    if not isinstance(main_obstacle, str):
         return False, "self_assessment: 'main_obstacle' debe ser string"
     
-    # Validar 'commitment_tomorrow'
-    if not isinstance(data['self_assessment']['commitment_tomorrow'], str):
+    # Buscar commitment (acepta ambos nombres)
+    commitment: Any = assessment.get('commitment_tomorrow') or assessment.get('tomorrow_commitment')
+    if commitment is None:
+        return False, "self_assessment: campo requerido faltante 'commitment_tomorrow' o 'tomorrow_commitment'"
+    
+    if not isinstance(commitment, str):
         return False, "self_assessment: 'commitment_tomorrow' debe ser string"
     
     # 10. Si pasó todas las validaciones
     return True, None
 
 
-def validate_week_logs(folder_path: str) -> Dict[str, List[str]]:
+def validate_week_logs(folder_path: str) -> Dict[str, List[Any]]:
     """
     Valida todos los archivos JSON en una carpeta (una semana de logs).
     
@@ -177,7 +203,7 @@ def validate_week_logs(folder_path: str) -> Dict[str, List[str]]:
         folder_path (str): Ruta a la carpeta que contiene archivos JSON
         
     Returns:
-        Dict[str, List[str]]: Diccionario con dos listas:
+        Dict[str, List[Any]]: Diccionario con dos listas:
             - 'valid': lista de rutas de archivos válidos
             - 'invalid': lista de tuplas (archivo, mensaje_error)
             
@@ -191,7 +217,7 @@ def validate_week_logs(folder_path: str) -> Dict[str, List[str]]:
         ...     process_log(file_path)
     """
     
-    results = {
+    results: Dict[str, List[Any]] = {
         'valid': [],
         'invalid': []
     }
@@ -307,12 +333,12 @@ def analyze_execution_patterns(file_path: str) -> Dict[str, Any] | None:
     }
 
 
-def generate_validation_report(results: Dict[str, List[str]]) -> str:
+def generate_validation_report(results: Dict[str, List[Any]]) -> str:
     """
     Genera un reporte legible de los resultados de validación.
     
     Args:
-        results (Dict[str, List[str]]): Resultados de validate_week_logs()
+        results (Dict[str, List[Any]]): Resultados de validate_week_logs()
         
     Returns:
         str: Reporte formateado como string
@@ -322,7 +348,7 @@ def generate_validation_report(results: Dict[str, List[str]]) -> str:
     valid_count = len(results['valid'])
     invalid_count = len(results['invalid'])
     
-    report = []
+    report: List[str] = []
     report.append("=" * 70)
     report.append("📊 REPORTE DE VALIDACIÓN - AI EXECUTION COACH")
     report.append("=" * 70)
@@ -339,15 +365,16 @@ def generate_validation_report(results: Dict[str, List[str]]) -> str:
         report.append("✅ ARCHIVOS VÁLIDOS (listos para análisis)")
         report.append("-" * 70)
         for file_path in results['valid']:
-            filename = os.path.basename(file_path)
+            filename = os.path.basename(str(file_path))
             report.append(f"  ✓ {filename}")
     
     if results['invalid']:
         report.append("\n" + "-" * 70)
         report.append("❌ ARCHIVOS INVÁLIDOS (requieren corrección)")
         report.append("-" * 70)
-        for file_path, error in results['invalid']:
-            filename = os.path.basename(file_path)
+        for item in results['invalid']:
+            file_path, error = item
+            filename = os.path.basename(str(file_path))
             report.append(f"  ✗ {filename}")
             report.append(f"    └─ Error: {error}")
     
@@ -356,7 +383,7 @@ def generate_validation_report(results: Dict[str, List[str]]) -> str:
     return "\n".join(report)
 
 
-def process_daily_logs_folder(logs_folder: str = None) -> Dict[str, Any]:
+def process_daily_logs_folder(logs_folder: str | None = None) -> Dict[str, Any]:
     """
     Procesa automáticamente todos los logs de la carpeta daily_logs_example.
     
@@ -376,7 +403,7 @@ def process_daily_logs_folder(logs_folder: str = None) -> Dict[str, Any]:
     # Si no se proporciona carpeta, buscar automáticamente
     if logs_folder is None:
         script_dir = Path(__file__).parent  # carpeta core/
-        logs_folder = script_dir.parent / "data" / "daily_logs_example"
+        logs_folder = str(script_dir.parent / "data" / "daily_logs_example")
     
     logs_folder = str(logs_folder)  # Convertir a string por si es Path
     
@@ -388,12 +415,12 @@ def process_daily_logs_folder(logs_folder: str = None) -> Dict[str, Any]:
     print(generate_validation_report(validation_results))
     
     # Analizar solo los archivos válidos
-    analyzed_logs = []
+    analyzed_logs: List[Dict[str, Any]] = []
     total_production = 0
     total_consumption = 0
     total_minutes = 0
-    honesty_scores = []
-    execution_scores = []
+    honesty_scores: List[float] = []
+    execution_scores: List[float] = []
     
     if validation_results['valid']:
         print("\n📊 ANALIZANDO PATRONES DE EJECUCIÓN\n" + "-" * 70)
@@ -418,7 +445,7 @@ def process_daily_logs_folder(logs_folder: str = None) -> Dict[str, Any]:
     
     # Calcular estadísticas consolidadas
     avg_execution_score = sum(execution_scores) / len(execution_scores) if execution_scores else 0
-    consolidated = {
+    consolidated: Dict[str, Any] = {
         'total_days_analyzed': len(analyzed_logs),
         'total_days_invalid': len(validation_results['invalid']),
         'total_production_minutes': total_production,
@@ -462,7 +489,7 @@ if __name__ == "__main__":
     # ========================================================================
     print("1️⃣  Creando archivo de ejemplo VÁLIDO...")
     
-    valid_log = {
+    valid_log: Dict[str, Any] = {
         "date": "2026-01-13",
         "activities": [
             {
@@ -547,7 +574,7 @@ if __name__ == "__main__":
     print("4️⃣  Creando archivos inválidos para demostración...")
     
     # Error 1: Campo faltante
-    invalid_log_1 = {
+    invalid_log_1: Dict[str, Any] = {
         "date": "2026-01-12",
         "activities": [
             {
@@ -568,7 +595,7 @@ if __name__ == "__main__":
         json.dump(invalid_log_1, f, indent=2)
     
     # Error 2: Tipo inválido
-    invalid_log_2 = {
+    invalid_log_2: Dict[str, Any] = {
         "date": "2026-01-11",
         "activities": [
             {
